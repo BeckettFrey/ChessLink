@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# TypeScript
+dist/
+build/
+*.tsbuildinfo
+
+# Express
+.env
+
+# Logs
+logs
+*.log
+logs/
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Misc
+coverage/
+tmp/
+temp/
+*.swp
+*.bak
+*.orig
+*.rej
+
+# System Files
+Thumbs.db
+Desktop.ini
+

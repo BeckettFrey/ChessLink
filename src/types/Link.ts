@@ -1,3 +1,4 @@
+// File: src/types/Link.ts
 /**
  * Represents a single chess move.
  */
@@ -12,6 +13,8 @@ export interface Move {
   promotion?: 'q' | 'r' | 'b' | 'n';
 }
 
+export type Color = 'white' | 'black';
+
 /**
  * Represents the tailored view of a game sent to a client player.
  * Contains all data needed to render the board and game context.
@@ -24,7 +27,7 @@ export interface Link {
   fen: string;
 
   /** The color this player is assigned to play as */
-  color: 'white' | 'black';
+  color: Color;
 
   /** Status of the game lifecycle */
   status: 'active' | 'waiting' | 'finished';
@@ -32,8 +35,8 @@ export interface Link {
   /** True if a draw offer is currently pending on this turn */
   pendingDraw: boolean;
 
-  /** Sequential move history in standard algebraic notation (SAN) */
-  moveHistory: string[];
+  /** Sequential move history */
+  moveHistory: Move[];
 
   /** The most recent move played, useful for board highlights */
   lastMove?: Move;

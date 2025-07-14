@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@gameManager/*": ["gameManager/*"],
+      "@gameManager": ["gameManager"],
+      "@services/*": ["services/*"],
+      "@services": ["services"],
+      "@types/*": ["types/*"],
+      "@types": ["types"]
+    }
+  }
+}

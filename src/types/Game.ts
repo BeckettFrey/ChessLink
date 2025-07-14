@@ -1,4 +1,5 @@
-// ./types/Game.ts
+// File: src/types/Game.ts
+import { Move } from './Link';
 
 /**
  * Represents the minimal game data shown in the lobby listing.
@@ -33,6 +34,9 @@ export interface Game extends BaseGame {
   /** User ID of the player who offered a draw this turn, or null if none */
   offeredDraw: string | null;
 
-  /** Full sequential move history in standard algebraic notation (SAN) */
-  moveHistory: string[];
+  /** User ID of the player who accepted the draw offer, or null if none */
+  lastMove?: Move;
+
+  /** Full sequential move history */
+  moveHistory: Move[];
 }
