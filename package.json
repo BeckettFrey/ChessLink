@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A chess game manager with cleaning service and websocket support.",
   "main": "dist/index.js",
+  "types": "src/types/index.ts",
   "scripts": {
     "build": "tsc",
     "dev": "npx ts-node -r tsconfig-paths/register src/server.ts",
