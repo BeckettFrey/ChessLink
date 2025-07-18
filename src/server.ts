@@ -22,7 +22,7 @@ app.get('/health', (req, res) => {
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "*", // Frontend URL or '*' for all origins
+        origin: process.env.ALLOWED_URLS?.split(",") || "*",
     },
 });
 
