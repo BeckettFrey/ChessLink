@@ -589,7 +589,7 @@ describe('GameManager', () => {
 
       beforeEach(() => {
         game = gameManager.createGame('player1', 'white')!;
-        game = gameManager.joinGame('player2', game.id);
+        game = gameManager.joinGame('player2', game.id)!;
       });
 
       it('should make legal move successfully', () => {
