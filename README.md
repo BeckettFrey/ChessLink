@@ -47,44 +47,6 @@ docker run -p 3000:3000 chesslink
 docker-compose up --build
 ```
 
-### 🌐 Production Deployment (Render.io)
-The project includes a `render.yaml` configuration for seamless deployment:
-
-1. Connect your GitHub repository to Render.io
-2. Environment variables are managed through Render's dashboard
-3. Automatic builds and deployments on push to main branch
-
-## 🎮 WebSocket API
-
-### Client → Server Events
-```typescript
-// Join the lobby and see available games
-socket.emit('requestLobby');
-
-// Create a new game
-socket.emit('createGame', 'white' | 'black');
-
-// Join an existing game
-socket.emit('joinGame', gameId);
-
-// Make a move
-socket.emit('makeMove', { from: 'e2', to: 'e4', promotion?: 'queen' });
-
-// Game actions
-socket.emit('offerDraw');
-socket.emit('acceptDraw');
-socket.emit('resign');
-```
-
-### Server → Client Events
-```typescript
-// Receive lobby updates
-socket.on('updateLobby', (games: SanitizedGame[]) => {});
-
-// Receive game state updates
-socket.on('updateChessLink', (gameState: ChessLink) => {});
-```
-
 ## 🧪 Testing
 ```bash
 # Run all tests
@@ -97,30 +59,13 @@ npm run test:coverage
 npm run test:watch
 ```
 
-Tests are organized by feature:
+Tests are not fully complete but structurally thought out. Test files are located in:
 ```
 src/
 ├── gameManager/__tests__/
 ├── middleware/__tests__/
 ├── services/__tests__/
 └── sockets/__tests__/
-```
-
-## 📁 Project Structure
-```
-ChessLink/
-├── src/
-│   ├── gameManager/          # Game state and logic management
-│   ├── middleware/           # Rate limiting and session management
-│   ├── services/             # Background services and utilities
-│   ├── sockets/              # WebSocket event handlers
-│   ├── types/                # TypeScript type definitions
-│   └── server.ts             # Main server entry point
-├── docs/                     # API documentation
-├── Dockerfile
-├── docker-compose.yaml
-├── render.yaml               # Render.io deployment config
-└── tsconfig.json
 ```
 
 ## 🎯 Use Cases
