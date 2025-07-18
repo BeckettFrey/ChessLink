@@ -1,7 +1,7 @@
 {
-  "name": "game-manager",
+  "name": "chess-link",
   "version": "1.0.0",
-  "description": "A chess game manager with cleaning service and websocket support.",
+  "description": "Type interfaces and server tools for ChessLink project.",
   "main": "dist/index.js",
   "types": "src/types/index.ts",
   "scripts": {
