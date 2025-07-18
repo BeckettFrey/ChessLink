@@ -92,14 +92,15 @@ import io from 'socket.io-client';
 
 const socket = io('your-chesslink-api-url');
 
-// Join lobby
-socket.emit('requestLobby');
+// Join game
+socket.emit('joinGame', gameId);
 
 // Handle game updates
-socket.on('updateChessLink', (gameState) => {
-  // Update your chess board UI
-  updateChessBoard(gameState.board);
+socket.on('updateChessLink', (chessLink) => {
+  // Update state accordingly
+  setChessLink(chessLink);
 });
 
 // Make a move
-socket.emit('makeMove', { from: 'e2', to: 'e4
+socket.emit('makeMove', { from: 'e2', to: 'e4' })
+```
