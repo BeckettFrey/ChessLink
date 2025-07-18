@@ -1,5 +1,5 @@
 # ♟️ ChessLink
-[![Tests](https://img.shields.io/github/workflow/status/BeckettFrey/ChessLink/Node.js%20CI?label=tests&logo=jest)](https://github.com/BeckettFrey/ChessLink/actions)
+[![CI](https://github.com/BeckettFrey/ChessLink/actions/workflows/ci.yml/badge.svg)](https://github.com/BeckettFrey/ChessLink/actions/workflows/ci.yml)
 
 **ChessLink** is a real-time WebSocket API for facilitating chess game interactions — minimal, TypeScript-driven, and designed for rapid integration.
 
