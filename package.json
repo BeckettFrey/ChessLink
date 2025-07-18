@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "npx ts-node -r tsconfig-paths/register src/server.ts",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "docker:build": "docker build -t chesslink .",
