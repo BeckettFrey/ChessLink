@@ -1,227 +1,318 @@
 // File: src/gameManager/index.ts
-import { Game, Color, Link, Move } from '@types';
-import { CleaningService } from '@services/cleaningService';
+import { Game, Move, Color } from '@/types';
+import { GameManagerAPI } from './types';
+import { StateSyncError } from './exceptions';
+import { 
+  CleaningService,
+  CleaningServiceConstructor, 
+  CleaningServiceInterface 
+} from '@/services/cleaningService';
 import { Chess } from 'chess.js';
 
-export class GameManager {
-  private userMap: Map<string, string>;  // userId -> gameId
-  private gameMap: Map<string, Game>;    // gameId -> Game
+export * from './types';
+export * from './exceptions';
 
-  constructor() {
-    this.userMap = new Map();
+export class GameManager implements GameManagerAPI {
+  private playerMap: Map<string, Game>;  // userId -> Game
+  private gameMap: Map<string, Game>;    // gameId -> Game
+  private cleaner: CleaningServiceInterface;
+
+  constructor(
+    cleanupIntervalMs = 100000,
+    staleThresholdMs = 100000,
+    Cleaner: CleaningServiceConstructor = CleaningService 
+  ) {
+    this.playerMap = new Map();
     this.gameMap = new Map();
 
-    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-    const twelveHoursMs = 12 * 60 * 60 * 1000;
-    new CleaningService(this.gameMap, twentyFourHoursMs, twelveHoursMs);
+    this.cleaner = new Cleaner(
+      this.gameMap,
+      cleanupIntervalMs,
+      staleThresholdMs,
+       this.eraseGame.bind(this) 
+    );
   }
 
-  /**
-   * Generates a unique game ID string (private).
-   */
-  private generateGameId(): string {
-    return `game_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  // ---- Utility Methods ----
+  private generateUniqueId(): string {
+    return Math.random().toString(36).substring(2, 9);
   }
 
-  /**
-   * Gets a game directly by gameId (private).
-   */
-  private getGame(gameId: string): Game | undefined {
-    return this.gameMap.get(gameId);
+  private getPlayerColor(game: Game, playerId: string): Color | undefined {
+    if (game.players.white?.id === playerId) return 'white';
+    if (game.players.black?.id === playerId) return 'black';
+    return undefined;
   }
 
-  /**
-   * Retrieves a game by userId (if user is in any game).
-   */
-  private getUserGame(userId: string): Game | undefined {
-    const gameId = this.userMap.get(userId);
-    return this.getGame(gameId);
-  }
-
-  /**
-   * Retrieves the link data for a user in a game, or null if not in any game.
-   */
-  public getLink(userId: string): Link | null {
-    const game = this.getUserGame(userId);
-    if (game) {
-      const link: Link = {
-        id: game.id,
-        color: game.players.white === userId ? 'white' : 'black',
-        fen: game.fen,
-        status: game.joinable ? 'waiting' : 'active',
-        pendingDraw: game.offeredDraw && game.offeredDraw !== userId ? true : false,
-        moveHistory: game.moveHistory,
-        lastMove: game.lastMove,
-        // username is userId for now
-        opponent: game.players.white === userId ? {
-          username: game.players.black,
-          connected: this.userMap.has(game.players.black)
-        } : {
-          username: game.players.white,
-          connected: this.userMap.has(game.players.white)
-        }
-      };
-      return link;
-    }
-    return null;
-  }
-  
-  /**
-   * Creates a new chess game for the user with chosen color.
-   */
-  public createGame(userId: string, color: Color): Game {
-    const gameId = this.generateGameId();
-    const now = new Date().getTime();
-    if(color !== 'white' && color !== 'black') {
-      throw new Error('Invalid color. Must be "white" or "black".');
-    }
-    const game: Game = {
-      id: gameId,
-      joinable: true,
-      fen: new Chess().fen(), // Start with initial position
-      players: {
-        white: color === 'white' ? userId : null,
-        black: color === 'black' ? userId : null
-      },
-      offeredDraw: null,
-      moveHistory: [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.userMap.set(userId, gameId);
-    this.gameMap.set(gameId, game);
-    return game;
-  }
-
-  /**
-   * Joins a user to an existing game by ID.
-   */
-  public joinGame(userId: string, gameId: string): void {
-    const game = this.getGame(gameId);
-    if (game) {
-      // Check if the game is joinable
-      if (!game.joinable) {
-        throw new Error(`already full`);
-      }
-
-      // Assign the user to the appropriate color
-      if (!game.players.white) {
-        game.players.white = userId;
-      } else if (!game.players.black) {
-        game.players.black = userId;
-      } else {
-        throw new Error(`Game with ID ${gameId} is already full.`);
-      }
-
-      // Set joinable to false if both players have joined
-      if (game.players.white && game.players.black) {
-        game.joinable = false;
-      }
-
-      // Update timestamps
-      game.updatedAt = Date.now();
-
-      // Set the user-game mapping
-      this.userMap.set(userId, gameId);
-    } else {
-      throw new Error(`Game with ID ${gameId} not found.`);
-    }
-  };
-
-  /**
-   * Deletes all data related to a game, cleaning up user and game mappings.
-   */
-  public deleteGame(gameId: string): void {
-    const game = this.getGame(gameId);
-    if (game) {
-      // Remove all users from userMap
-      if (game.players.white && this.userMap.get(game.players.white) === gameId) {
-        this.userMap.delete(game.players.white);
-      }
-
-      if (game.players.black && this.userMap.get(game.players.black) === gameId) {
-        this.userMap.delete(game.players.black);
+  // --- Cleanup Protocol ---
+  public eraseGame = (obj: any): void => {
+    const game = obj as Game;
+    if (!game || !game.players || !game.id) return;
+    for (const color of ['white', 'black'] as const) {
+      const playerId = game.players[color]?.id;
+      if (playerId) {
+        this.playerMap.delete(playerId);
       }
     }
-    // Remove the game from gameMap
-    this.gameMap.delete(gameId);
+    this.gameMap.delete(game.id);
   }
 
-  /**
-   * Handles a draw offer from a user.
-   */
-  public offerDraw(userId: string): void {
-    const game = this.getUserGame(userId);
-    if (game) {
-      if (game.offeredDraw) {
-        throw new Error('A draw has already been offered in this game.');
-      }
-      game.offeredDraw = userId;
-      game.updatedAt = Date.now();
-    } else {
-      throw new Error('User is not in any game.');
-    }
-  }
-
-  /**
-   * Processes a move made by a user in their game.
-   */
-  public makeMove(userId: string, move: Move): void {
-    const game = this.getUserGame(userId);
-    if (!game) {
-        throw new Error('User is not in any game.');
-    }
-
-    // Initialize chess.js instance with current game position or start position
-    const chess = new Chess(game.fen || undefined);
-
-    // Validate the move
+  // --- Connection Handling ---
+  public connect(playerId: string): Game | undefined { 
     try {
-        const validatedMove = chess.move({
-            from: move.from,
-            to: move.to,
-            promotion: move.promotion // Include promotion if provided
-        });
+      const game = this.playerMap.get(playerId);
 
-        if (!validatedMove) {
-            throw new Error('Invalid move.');
+      if (game) {
+        // Process reconnection
+        const playerColor = this.getPlayerColor(game, playerId);
+        if (!playerColor) {
+          throw new StateSyncError('Player not found in game during reconnection');
         }
 
-        // Update game state
-        game.moveHistory.push(move);
-        game.lastMove = move;
-        game.fen = chess.fen(); // Update FEN
-        game.offeredDraw = null;
-        game.updatedAt = Date.now();
-
-        // Check for game over conditions
-        if (chess.isGameOver()) {
-            this.deleteGame(game.id);
-            this.userMap.delete(game.players.white);
-            this.userMap.delete(game.players.black);
+        if (game.players[playerColor]) {
+          game.players[playerColor].connected = true;
+          game.updatedAt = Date.now();
+          return game;
         }
+      }
+
     } catch (error) {
-        throw new Error(`${error.message}`);
+      // Throw known errors, log uncharted ones
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error connecting player:', error);
     }
+    return undefined;
   }
+   
+  public disconnect(playerId: string): Game | undefined { 
+    try {
+      const game = this.playerMap.get(playerId);
 
-  public detachPlayer(userId: string): string | undefined {
-    const game = this.getUserGame(userId);
-    if (game) {
-      // Remove user from userMap
-      this.userMap.delete(userId);
-      return game.id;
+      if (game) {
+        // Process disconnection
+        const playerColor = this.getPlayerColor(game, playerId);
+        if (!playerColor) {
+          throw new StateSyncError('Player not found in game during disconnection');
+        }
+        
+        if(game.players[playerColor]) {
+          game.players[playerColor].connected = false;
+          game.updatedAt = Date.now();
+        }
+        return game;
+      }
+
+    } catch (error) {
+      // Throw known errors, log uncharted ones
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error disconnecting player:', error);
     }
     return undefined;
   }
 
-  public attachPlayer(userId: string, gameId: string): Game | undefined {
-    const game = this.getGame(gameId);
-    if (game) {
-      // Re-associate user with game
-      this.userMap.set(userId, gameId);
-      return game;
-    }
+  // --- Lobby Handling ---
+  public createGame(playerId: string, color: Color): Game | undefined { 
+    const game = this.playerMap.get(playerId);
+    if (game) return undefined; // Player already in a game
+
+    try {
+
+      const newGame: Game = {
+        id: this.generateUniqueId(),
+        players: {
+          [color]: { id: playerId, connected: true }
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        fen: new Chess().fen(),
+        moves: [],
+        joinable: true,
+        outcome: undefined,
+        drawOfferedBy: undefined
+      };
+
+      this.playerMap.set(playerId, newGame);
+      this.gameMap.set(newGame.id, newGame);
+      return newGame;
+
+    } catch (error) {
+      console.error('Error creating game:', error);
       return undefined;
+    }
   }
+
+  public joinGame(playerId: string, gameId: string): Game | undefined { 
+    try {
+    
+      const game = this.gameMap.get(gameId);
+      if (!game) return undefined;
+
+      // Process joining
+      if (game.players.white && game.players.black) {
+        return undefined; // Game full
+      }
+
+      const playerColor = game.players.white ? 'black' : 'white';
+      game.players[playerColor] = { id: playerId, connected: true };
+      
+      game.joinable = false;
+      game.updatedAt = Date.now();
+
+      this.playerMap.set(playerId, game);
+      return game;
+    } catch (error) {
+      console.error('Error joining game:', error);
+      return undefined;
+    }
+  }
+
+  public getAllGames(): Game[] { return Array.from(this.gameMap.values()); }
+
+  // --- Game Handling ---
+  public offerDraw(playerId: string): Game | undefined { 
+
+    try {
+
+      const game = this.playerMap.get(playerId);
+      if (!game) return undefined; // Player not in a game
+      if (game.outcome) return undefined; // Game already concluded
+      if (game.drawOfferedBy) return undefined; // Draw already offered
+
+      const playerColor = this.getPlayerColor(game, playerId);
+
+      if (!playerColor) {
+        throw new StateSyncError('Player not found in game');
+      }
+
+      game.drawOfferedBy = playerColor;
+      game.updatedAt = Date.now();
+      return game;
+
+    } catch (error) {
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error offering draw:', error);
+    }
+    return undefined;
+  }
+
+  public acceptDraw(playerId: string): Game | undefined { 
+    try {
+
+      const game = this.playerMap.get(playerId);
+      if (!game) return undefined; // Player not in a game
+      if (game.outcome) return undefined; // Game already concluded
+      if (!game.drawOfferedBy) return undefined; // No draw offered
+
+      const playerColor = this.getPlayerColor(game, playerId);
+
+      if (!playerColor) {
+        throw new StateSyncError('Player not found in game');
+      }
+
+      if (game.drawOfferedBy === playerColor) {
+        return undefined; // Player cannot accept their own draw offer
+      }
+
+      game.outcome = { reason: 'draw' };
+      game.drawOfferedBy = undefined;
+      game.updatedAt = Date.now();
+      return game;
+
+    } catch (error) {
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error accepting draw:', error);
+    }
+    return undefined;
+  }
+
+  public resign(playerId: string): Game | undefined { 
+    try {
+
+      const game = this.playerMap.get(playerId);
+      if (!game) return undefined; // Player not in a game
+      if (game.outcome) return undefined; // Game already concluded
+
+      const playerColor = this.getPlayerColor(game, playerId);
+      if (!playerColor) {
+        throw new StateSyncError('Player not found in game');
+      }
+
+      const winnerColor = playerColor === 'white' ? 'black' : 'white';
+      game.outcome = { winner: winnerColor, reason: 'resignation' };
+      game.updatedAt = Date.now();
+      return game;
+
+    } catch (error) {
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error resigning from game:', error);
+    }
+    return undefined;
+
+   }
+
+  public makeMove(playerId: string, move: Move): Game | undefined { 
+    try {
+      
+      const game = this.playerMap.get(playerId);
+      if (!game) return undefined; // Player not in a game
+      if (game.outcome) return undefined; // Game already concluded
+
+      const playerColor = this.getPlayerColor(game, playerId);
+      if (!playerColor) {
+        throw new StateSyncError('Player not found in game');
+      }
+
+      const chess = new Chess(game.fen);
+      const turn = chess.turn() === 'w' ? 'white' : 'black';
+      if (turn !== playerColor) {
+        return undefined; // Not player's turn
+      }
+
+      const result = chess.move({
+        from: move.from,
+        to: move.to,
+        promotion: move.promotion,
+      });
+
+      if (!result) {
+        return undefined; // Illegal move
+      }
+
+      game.fen = chess.fen();
+      game.moves.push(move);
+      game.updatedAt = Date.now();
+
+      // Check for game conclusion
+      if (chess.isCheckmate()) {
+        game.outcome = { winner: playerColor, reason: 'checkmate' };
+      } else if (chess.isStalemate()) {
+        game.outcome = { reason: 'stalemate' };
+      } else if (chess.isInsufficientMaterial()) {
+        game.outcome = { reason: 'insufficient_material' };
+      } else if (chess.isThreefoldRepetition()) {
+        game.outcome = { reason: 'threefold_repetition' };
+      } else if (chess.isDraw()) {
+        game.outcome = { reason: 'draw' };
+      }
+
+      return game;
+
+    } catch (error) {
+      if (error instanceof StateSyncError) {
+        throw error;
+      }
+      console.error('Error making move:', error);
+    }
+    return undefined;
+   }
 }

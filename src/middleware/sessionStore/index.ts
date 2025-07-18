@@ -1,3 +1,4 @@
+// File: src/middleware/sessionStore/index.ts
 import { Socket } from "socket.io";
 import { MissingUserIdException } from "./exceptions";
 
@@ -12,6 +13,11 @@ export function sessionMiddleware(socket: Socket, next: (err?: Error) => void) {
         return next(new MissingUserIdException());
     }
     socket.data.userId = userId;
+
+    const username = socket.handshake.auth?.username;
+    if (username) {
+        socket.data.username = username;
+    }
     next();
 }
 

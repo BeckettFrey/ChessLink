@@ -1,3 +1,4 @@
+// File: src/middleware/sessionStore/exceptions.ts
 /**
  * Custom exception for missing userId in session.
  * (requires userId to be present in socket handshake auth data)

@@ -1,53 +1,50 @@
 // File: src/services/cleaningService/index.ts
-import { CleanupException } from './exceptions';
+import { CleaningServiceInterface, TimestampedObject } from "./types";
+import { CleanupException } from "./exceptions";
+export * from "./types";
+export * from "./exceptions";
 
-type TimestampedObject = {
-  updatedAt: number;
-  [key: string]: any;
-};
-
-export class CleaningService {
+export class CleaningService implements CleaningServiceInterface {
   private map: Map<string, TimestampedObject>;
   private staleThresholdMs: number;
   private cleanupIntervalMs: number;
   private cleanupTimer?: NodeJS.Timeout;
+  private cleanupProtocol: (obj: TimestampedObject) => void;
 
-  constructor(map: Map<string, TimestampedObject>, cleanupIntervalMs: number, staleThresholdMs: number) {
+  constructor(
+    map: Map<string, TimestampedObject>, 
+    cleanupIntervalMs: number, 
+    staleThresholdMs: number, 
+    cleanupProtocol: (obj: TimestampedObject) => void
+  ) {
     this.map = map;
     this.cleanupIntervalMs = cleanupIntervalMs;
     this.staleThresholdMs = staleThresholdMs;
-
+    if (!cleanupProtocol) {
+      throw new Error('A cleanup protocol function must be provided');
+    }
+    this.cleanupProtocol = cleanupProtocol;
     if (cleanupIntervalMs > 0 && staleThresholdMs > 0) {
-      this.startCleanup();
+      this.monitorCleanup();
     } else {
       throw new Error('Invalid cleanup or stale threshold interval');
     }
   }
 
-  /**
-   * Starts the periodic cleanup of stale state.
-   */
-  private startCleanup() {
-    const runCleanup = () => {
-      try {
-        const now = Date.now();
-        for (const [gameId, game] of Array.from(this.map.entries())) {
-          if (game.updatedAt + this.staleThresholdMs < now) {
-            this.map.delete(gameId);
-          }
+  private monitorCleanup() {
+    try {
+      const now = Date.now();
+      for (const [_, obj] of Array.from(this.map.entries())) {
+        if (obj.updatedAt + this.staleThresholdMs < now) {
+          this.cleanupProtocol(obj);
         }
-        this.cleanupTimer = setTimeout(runCleanup, this.cleanupIntervalMs);
-      } catch (error) {
-        throw new CleanupException('Error during cleanup: ' + error.message);
       }
-    };
-
-    runCleanup();
+    } catch (error) {
+      throw new CleanupException('Error during cleanup: ' + (error as Error).message);
+    }
+    this.cleanupTimer = setTimeout(() => this.monitorCleanup(), this.cleanupIntervalMs);
   }
 
-  /**
-   * Stops the scheduled cleanup (for testing or shutdown)
-   */
   stopCleanup() {
     if (this.cleanupTimer) {
       clearTimeout(this.cleanupTimer);

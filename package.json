@@ -5,17 +5,26 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "jest"
+    "start": "node -r tsconfig-paths/register dist/index.js",
+    "test": "jest",
+    "docker:build": "docker build -t chesslink .",
+    "docker:run": "docker run -p 3000:3000 chesslink",
+    "docker:dev": "docker-compose up --build",
+    "docker:stop": "docker-compose down"
   },
   "dependencies": {
     "chess.js": "^1.4.0",
-    "socket.io": "^4.0.0"
+    "express": "^5.1.0",
+    "rate-limiter-flexible": "^7.1.1",
+    "socket.io": "^4.0.0",
+    "tsconfig-paths": "^4.2.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/jest": "^29.5.14",
-    "@types/node": "^20.19.7",
+    "@types/node": "^20.19.8",
     "jest": "^29.7.0",
+    "socket.io-client": "^4.8.1",
     "ts-jest": "^29.4.0",
     "typescript": "^5.8.3"
   }

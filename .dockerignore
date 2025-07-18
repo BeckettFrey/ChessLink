@@ -1,0 +1,38 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore build output
+dist/
+build/
+
+# Ignore logs
+*.log
+
+# Ignore environment files
+.env
+.env.local
+.env.*.local
+__tests__/
+
+# Ignore Docker files
+Dockerfile*
+docker-compose*
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore coverage reports
+coverage/
+
+# Ignore dependency directories
+bower_components/
+jspm_packages/
+
+# Ignore editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp

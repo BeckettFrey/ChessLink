@@ -1,3 +1,4 @@
+// File: src/middleware/rateLimiter/index.ts
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { RateLimitExceededException } from "./exceptions";
 import { Socket } from "socket.io";

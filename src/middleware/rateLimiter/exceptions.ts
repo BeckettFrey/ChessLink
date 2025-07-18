@@ -1,3 +1,4 @@
+// File: src/middleware/rateLimiter/exceptions.ts
 /**
  * Custom exception for rate limit exceeded.
  */
