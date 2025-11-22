@@ -1,26 +1,27 @@
 # ♟️ ChessLink
+[![Docs](https://img.shields.io/badge/docs-📚-blue?style=flat-square)](docs/ChessLink%20WebSockets%20API.md)
 [![CI](https://github.com/BeckettFrey/ChessLink/actions/workflows/test.yaml/badge.svg)](https://github.com/BeckettFrey/ChessLink/actions/workflows/test.yaml)
 
-**ChessLink** is a real-time WebSocket API for facilitating chess game interactions — minimal, TypeScript-driven, and designed for rapid integration.
+**ChessLink** is a real-time WebSocket API for facilitating chess game interactions, it is minimal, TypeScript-driven, and designed for a lightweight client and rapid integration.
 
-> 🧠 This project is a **personal learning exercise** where I explored WebSocket communication patterns, practiced deploying a Node.js server to Render.io, and built a simple TypeScript API for real-time chess gameplay with basic lobby management.
-
-## 🔧 Tech Stack
+## Tech Stack
 * [Node.js](https://nodejs.org/) with [TypeScript](https://www.typescriptlang.org/)
 * [Socket.io](https://socket.io/) for real-time WebSocket communication
 * [Docker](https://docs.docker.com/) for containerization and deployment
 * [Jest](https://jestjs.io/) for testing
 * [Render.io](https://render.com/) for production deployment
 
-## ✅ Features
-* Real-time multiplayer chess gameplay via WebSocket connections
-* Basic lobby system for game discovery and matchmaking
-* Game state management with move validation
-* Reconnection handling with 5-second grace period
-* Draw offers and resignation support
-* Player-specific game state updates
-* Dockerized for deployment consistency
-* TypeScript implementation with type definitions
+## Faith-Based (Lightweight Client Approach)
+
+ChessLink is built on a “faith-based” client model; meaning the client doesn’t need to implement any chess
+logic, no move validation, check detection, turn management, or game state calculations. All of
+that is handled server-side.
+
+Clients simply trust (“have faith in”) the server’s authoritative game updates and emit basic
+intents such as moves or lobby actions. This keeps the client extremely lightweight, reduces the
+chance of desynchronization, and ensures consistent rule enforcement across all players.
+
+Also note that excessive api requests can be throttled from the frontend if some client side logic adds an intermediate validation layer [as implemented in the client demo](https://chess-link-client.vercel.app/), this becomes more evident with scale.
 
 ## 🚀 Quickstart
 
@@ -70,23 +71,7 @@ src/
 └── sockets/__tests__/
 ```
 
-## 🎯 Use Cases
-Useful for developers who need:
-* **Simple chess integration** — Basic API for chess functionality
-* **Minimal lobby setup** — Straightforward multiplayer chess implementation
-* **Real-time game state** — Synchronized gameplay across clients
-* **Learning reference** — Example implementation for similar projects
-
-## 📚 Learning Achievements
-This repository documents my hands-on exploration of real-time application development. Through building ChessLink, I:
-
-* **Learned WebSocket Communication**: Implemented bidirectional real-time communication with event handling and state synchronization
-* **Practiced Production Deployment**: Successfully containerized and deployed a TypeScript application to Render.io
-* **Explored TypeScript APIs**: Developed a structured API with type definitions and basic error handling
-* **Experimented with Game State Management**: Created systems for handling game states, disconnections, and player interactions
-* **Applied Development Practices**: Used Docker for consistency, Jest for testing, and organized project structure
-
-## 🔗 Integration Example
+## Integration Example
 ```typescript
 import io from 'socket.io-client';
 
@@ -104,3 +89,5 @@ socket.on('updateChessLink', (chessLink) => {
 // Make a move
 socket.emit('makeMove', { from: 'e2', to: 'e4' })
 ```
+
+See [documentation]([![Docs](docs/ChessLink%20WebSockets%20API.md) for a more thorough introduction to the API outlining the full set of socket events.
