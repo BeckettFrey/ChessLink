@@ -90,4 +90,4 @@ socket.on('updateChessLink', (chessLink) => {
 socket.emit('makeMove', { from: 'e2', to: 'e4' })
 ```
 
-See [documentation]([![Docs](docs/ChessLink%20WebSockets%20API.md) for a more thorough introduction to the API outlining the full set of socket events.
+See [documentation](docs/ChessLink%20WebSockets%20API.md) for a more thorough introduction to the API outlining the full set of socket events.
