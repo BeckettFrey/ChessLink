@@ -1,6 +1,6 @@
 # **ChessLink \- ChessSockets API**
 
-* **See [Types](src/types/index.ts) for the declarations and documentation corresponding to the reusable aliases and structures referenced.**  
+* **See [types](src/types/index.ts) for the declarations and documentation corresponding to the reusable aliases and structures referenced.**  
 * **Remember that a socket is one instance of a server client connection s.t. events can be emitted both ways. These docs consolidate the two-way emissions under two categories.**  
 * ***Server API*** **is the interface by which the server interacts with the client. Read more about socket.io's server API [here](https://socket.io/docs/v4/server-api/).**  
 * ***Client API*** **is the interface by which the client interacts with the server. Read more about socket.io's client API [here](https://socket.io/docs/v4/client-api).**
