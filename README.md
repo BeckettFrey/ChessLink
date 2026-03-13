@@ -23,7 +23,7 @@ chance of desynchronization, and ensures consistent rule enforcement across all 
 
 Also note that excessive api requests can be throttled from the frontend if some client side logic adds an intermediate validation layer [as implemented in the client demo](https://chess-link-client.vercel.app/), this becomes more evident with scale.
 
-## 🚀 Quickstart
+## Quickstart
 
 ### Local Development
 ```bash
@@ -40,7 +40,7 @@ npm run dev
 
 The server will start on `http://localhost:3000` with health check available at `/health`.
 
-### 🐳 Docker Setup
+### Docker Setup
 ```bash
 # Build and run with Docker
 docker build -t chesslink .
@@ -50,7 +50,7 @@ docker run -p 3000:3000 chesslink
 docker-compose up --build
 ```
 
-## 🧪 Testing
+## Testing
 ```bash
 # Run all tests
 npm test
