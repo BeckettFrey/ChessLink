@@ -21,8 +21,6 @@ Clients simply trust (“have faith in”) the server’s authoritative game upd
 intents such as moves or lobby actions. This keeps the client extremely lightweight, reduces the
 chance of desynchronization, and ensures consistent rule enforcement across all players.
 
-Also note that excessive api requests can be throttled from the frontend if some client side logic adds an intermediate validation layer [as implemented in the client demo](https://chess-link-client.vercel.app/), this becomes more evident with scale.
-
 ## Quickstart
 
 ### Local Development
