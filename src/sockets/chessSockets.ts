@@ -133,8 +133,15 @@ export function registerChessSockets(io: Server) {
                 }
                 // Set a 5-second timer to finalize disconnection if not reconnected
                 const timer = setTimeout(() => {
-                    gameManager.disconnect(userId);
+                    const timedOutGame = gameManager.disconnect(userId);
                     timerMap.delete(userId);
+                    if (timedOutGame) {
+                        const disconnectedColor = timedOutGame.players.white?.id === userId ? 'white' : 'black';
+                        const winnerColor = disconnectedColor === 'white' ? 'black' : 'white';
+                        timedOutGame.outcome = { winner: winnerColor, reason: 'timeout' };
+                        emitGame(io, timedOutGame);
+                        gameManager.eraseGame(timedOutGame);
+                    }
                     const games = gameManager.getAllGames();
                     io.emit('updateLobby', sanitizeGames(games));
                 }, 5000); // 5 seconds to reconnect
